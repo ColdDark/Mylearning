@@ -1,6 +1,6 @@
 #!/bin/bash
 # Author: 寒露凝冰
-# Verison: 1.1
+# Verison: 1.2
 # Update Time: 2017年1月17日
 
 # This script is used to start,restart,stop tomcat or osgi and 
@@ -10,11 +10,12 @@
 # RUN_TOMCAT_NAME represent tomcat name which is running
 # TOMCAT_LIST represent all tomcat name which in a specific directory
 RUN_TOMCAT_NAME=(`ps aux|grep tomcat|grep -v grep|awk '{print $12}'|cut -d= -f2|awk -F'/conf' '{print $1}'`)
-TOMCAT_LIST=`ls /server/*_tomcat* -d`
+TOMCAT_LIST=`ls /test/*_tomcat* -d`
 
 
 # Function tomcatallstart is used to start all tomcat
 tomcatallstart () {
+	echo "$TOMCAT_LIST"
 	for START_TOMCAT in $TOMCAT_LIST;do
 		$START_TOMCAT/bin/startup.sh
 		sleep 5
@@ -34,18 +35,9 @@ tomcatstart () {
 			fi
 		done
 		
-		[ $i -eq 0 ] &&eq$START_TOMCAT_NAME/bin/startup.sh && sleep 5
+		[ $i -eq 0 ] && $START_TOMCAT_NAME/bin/startup.sh && sleep 5
 		read -p "退出启动程序请输入 1，继续按回车键：" INPUT1
 		[ "$INPUT1" = "1" ] && break
-	done
-}
-
-
-# Function osgiallstart is used to start all osgi
-osgiallstart () {
-	for START_TOMCAT in $TOMCAT_LIST;do
-		$START_TOMCAT/bin/startup.sh
-		sleep 5
 	done
 }
 
@@ -54,7 +46,7 @@ osgiallstart () {
 # RUN_OSGI_NAME osgi names which is running
 # OSGI_LIST names of all osgi prefix
 RUN_OSGI_NAME=(`ps aux|grep karaf|grep -v grep|awk '{print $20}'|cut -d= -f2`)
-OSGI_LIST=`ls /server/*karaf* -d`
+OSGI_LIST=`ls /test/*karaf* -d`
 # Function tomcatstart is used to start osgi
 osgistart () {
 	echo "选择要启动 OSGI 的编号："
@@ -74,6 +66,15 @@ osgistart () {
 }
 
 
+# Function osgiallstart is used to start all osgi
+osgiallstart () {
+	for START_OSGI in $OSGI_LIST;do
+		$START_OSGI/bin/startup.sh
+		sleep 5
+	done
+}
+
+
 # Function stoposgi close osgi
 stoposgi () {
 	for STOP_OSGI in $RUN_OSGI_NAME;do
@@ -85,22 +86,23 @@ stoposgi () {
 
 # Function stoptomcat close tomcat
 stoptomcat () {
-	for STOP_TOMCAT in $RUN_TOMCAT_NAME;do
+	for STOP_TOMCAT in ${RUN_TOMCAT_NAME[*]};do
 		$STOP_TOMCAT/bin/shutdown.sh
 		sleep 5
 		res=`ps aux|grep "$STOP_TOMCAT"|grep -v grep|awk '{print $2}'`
-		if [ -n $res ];then
+		if [ -n "$res" ];then
 			kill -9 $res
 		fi
 	done
 }
 
-
+# Function deletelog clean tomcat's log
 deletelog () {
 	for TOMCAT_NAME in $TOMCAT_LIST;do
 		cat /dev/dull >$TOMCAT_NAME/logs/catalina.out
 	done
 }
+
 
 # Now, invoke functions
 case $1 in
@@ -113,12 +115,12 @@ case $1 in
 		osgiallstart
 		;;
 	--stopall)
-		tomcatstop
-		osgistop
+		stoptomcat
+		stoposgi
 		;;
 	--restartall)
-		tomcatstop
-		osgistop
+		stoptomcat
+		stoposgi
 		tomcatallstart
 		osgiallstart
 		;;
@@ -126,6 +128,6 @@ case $1 in
 		deletelog
 		;;
 	--help|*)
-		echo "Usage:$0 start|startall|restartall|deletelog"
+		echo "Usage:$0 --start|--startall|--stopall|--restartall|--cleanlog"
 		;;
 esac
