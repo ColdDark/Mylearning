@@ -1,6 +1,6 @@
 #!/bin/bash
 # Author: 寒露凝冰
-# Verison: 1.0
+# Verison: 1.1
 # Update Time: 2017年1月17日
 
 # This script is used to start,restart,stop tomcat or osgi and 
@@ -88,6 +88,10 @@ stoptomcat () {
 	for STOP_TOMCAT in $RUN_TOMCAT_NAME;do
 		$STOP_TOMCAT/bin/shutdown.sh
 		sleep 5
+		res=`ps aux|grep "$STOP_TOMCAT"|grep -v grep|awk '{print $2}'`
+		if [ -n $res ];then
+			kill -9 $res
+		fi
 	done
 }
 
