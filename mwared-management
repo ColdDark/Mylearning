@@ -1,7 +1,7 @@
 #!/bin/bash
 # Author: 寒露凝冰
-# Verison: 1.2
-# Update Time: 2017年1月17日
+# Verison: 1.3
+# Update Time: 2017年11月21日
 
 # This script is used to start,restart,stop tomcat or osgi and 
 # clean it's log
@@ -69,7 +69,7 @@ osgistart () {
 # Function osgiallstart is used to start all osgi
 osgiallstart () {
 	for START_OSGI in $OSGI_LIST;do
-		$START_OSGI/bin/startup.sh
+		$START_OSGI/bin/start
 		sleep 5
 	done
 }
